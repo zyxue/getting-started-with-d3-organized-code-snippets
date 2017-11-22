@@ -1,0 +1,201 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width">
+
+  <script src="/lib/d3.v3.min.js"></script>
+
+  <style>
+   .axis {
+       font-family: sans-serif;
+       font-size:0.8em;
+    }
+    path {
+        fill:none;
+        stroke:black;
+        stroke-width:1px;
+    }
+    .tick {
+        fill:black;
+        stroke:black;
+    }
+    circle {
+         stroke:black;
+         stroke-width:0px;
+    }
+    circle.times_square {
+        fill:DeepPink;
+    }
+    circle.grand_central{
+        fill:MediumSeaGreen;
+    }
+    path.times_square {
+        stroke:DeepPink;
+    }
+    path.grand_central {
+        stroke:MediumSeaGreen;
+    }
+  </style>
+
+  <script>
+    function draw(data) {
+        var margin = 60,
+            width = 1000,
+            height = 500;
+
+        // adding svg
+        d3.select("body")
+            .append("svg")
+            .attr("height", height)
+            .attr("width", width)  // there was a typo in the book here
+            .append("g")
+            .attr("class","chart");
+
+        // bind data
+        d3.select("svg")
+            .selectAll("circle.times_square")
+            .data(data.times_square)
+            .enter()
+            .append("circle")
+            .attr("class", "times_square");
+
+        d3.select("svg")
+            .selectAll("circle.grand_central")
+            .data(data.grand_central)
+            .enter()
+            .append("circle")
+            .attr("class", "grand_central");
+
+        // calculate scales
+        var time_extent = d3.extent(
+            data.times_square.concat(data.grand_central),
+            function(d){
+                return d.time;
+            }
+        );
+        console.log(time_extent);
+        // note: linear scale has almost the same API, but it won't render
+        // time-like text
+        // var time_scale = d3.scale.linear()
+        var time_scale = d3.time.scale()
+                .range([margin, width-margin])
+                .domain(time_extent)
+        ;
+
+        var count_extent = d3.extent(
+            data.times_square.concat(data.grand_central),
+            function(d) {
+                return d.count;
+            }
+        );
+        var count_scale = d3.scale.linear()
+                .range([height-margin, margin])
+                .domain(count_extent)
+        ;
+
+        // draw data points
+        d3.selectAll("circle")
+            .attr("cx", function(d){
+                return time_scale(d.time);
+            })
+            .attr("cy", function(d){
+                return count_scale(d.count);
+            })
+            .attr("r", 4)
+        ;
+
+        // draw axes
+
+        // Note: since time_axis already take into consideration the information
+        // of margin, so the x axis doesn't need to be transformed by margin
+        // again. Better design a systematic way of remembering all the
+        // coordinate systems for all elements. Otherwise, it easily becomes
+        // confusing.
+        var time_axis = d3.svg.axis().scale(time_scale);
+        d3.select("svg")
+            .append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(" + 0 + ", " + (height - margin) + ")")
+            .call(time_axis);
+        /* .attr("transform", "translate(" + margin + ", " + (height - margin) + ")").call(time_axis);*/
+
+        var count_axis = d3.svg.axis().scale(count_scale).orient("left");
+        d3.select("svg")
+          .append("g")
+          .attr("class", "y axis")
+          .attr("transform", "translate(" + margin + ",0)")
+          .call(count_axis);
+
+        // adding a path
+        var line = d3.svg.line()
+                     .x(function(d){
+                         return time_scale(d.time);
+                     })
+                     .y(function(d){
+                         return count_scale(d.count);
+                     });
+
+        d3.select("svg")
+          .append("path")
+          .attr("d", line(data.times_square))
+          .attr("class", "times_square");
+
+        d3.select("svg")
+          .append("path")
+          .attr("d", line(data.grand_central))
+          .attr("class", "grand_central");
+
+        // draw two origin points for reference
+        d3.select("svg")
+          .append("circle")
+          .attr("cx", 0)
+          .attr("cy", 0)
+          .attr("r", 5)
+          .attr("fill", "red")
+        ;
+
+        d3.select("svg")
+          .append("circle")
+          .attr("cx", margin)
+          .attr("cy", margin)
+          .attr("r", 5)
+          .attr("fill", "blue")
+        ;
+
+        // add axes labels
+
+        // Note: the coordinate system is based on the .y.axis, its (0, 0)
+        // point is equivalent to the (margin, 0) point of the svg, because the
+        // .y.axis has been translated by (margin, 0). its translation by (x,y)
+        // is affected as well because the axis is oriented left.
+        //
+        // In summary, an effective way to look at transformation is to figure
+        // out the current coordinate system first, and then see how to
+        // transform. Otherwise, it's easy to lose track
+        d3.select(".y.axis")
+          .append("text")
+          .text("Mean number of turnstile revolutions")
+          .attr("transform", "rotate (-90, " + 0 + ", " + margin + ") translate(" + -(height - margin) / 1.6 + ", " + - margin / 1.5 + ")")
+          .attr("x", 0)
+          .attr("y", margin);
+
+        d3.select(".x.axis")
+          .append("text")
+          .text("Time")
+          .attr("x", function(){return width / 2})
+          .attr("y", margin / 1.5);
+    }
+  </script>
+
+</head>
+<body>
+    <script>
+        d3.json("/data/turnstile_traffic.json", draw);
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width">
+
+  <script src="/lib/d3.v3.min.js"></script>
+
+  <style >
+  </style>
+
+  <script>
+    function draw(data) {
+        "use strict";
+        d3.select("body")
+            .append("ul")
+            .selectAll("li")
+            .data(data)
+            .enter()
+            .append("li")
+            .style("font-weight", function (d) {
+                if (d.status == "GOOD SERVICE"){
+                    return "normal";
+                } else {
+                    return "bold";
+                }
+            })
+            .text(function (d) {
+                return d.name + ": " + d.status;
+            });
+    }
+  </script>
+
+</head>
+<body>
+    <script>
+        d3.json("/data/service_status.json", draw);
+    </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width">
+
+  <script src="/lib/d3.v3.min.js"></script>
+
+  <style >
+    circle{
+        stroke:black;
+        stroke-width:0.5px;
+        fill:RoyalBlue;
+        opacity:0.6;
+    }
+  </style>
+
+  <script>
+    function draw(data) {
+        var width = 1500, height = 1500;
+        var svg = d3.select("body")
+                    .append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+
+        var node = svg.selectAll("circle.node")
+                      .data(data.nodes)
+                      .enter()
+                      .append("circle")
+                      .attr("class", "node")
+                      .attr("r", 12);
+
+        var link = svg.selectAll("line.link")
+                      .data(data.links)
+                      .enter()
+                      .append("line")
+                      .style("stroke","black");
+
+        var force = d3.layout.force()
+                      .charge(-120)
+                      .linkDistance(30)
+                      .size([width, height])
+                      .nodes(data.nodes)
+                      .links(data.links)
+                      .start();
+  
+        force.on("tick", function() {
+            link.attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
+
+            node.attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
+            });
+
+        node.call(force.drag);
+  }
+  </script>
+
+</head>
+<body>
+    <script>
+        d3.json("/data/stations_graph.json", draw);
+    </script>
+</body>
+</html>

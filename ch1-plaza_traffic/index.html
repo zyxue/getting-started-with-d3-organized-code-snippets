@@ -1,0 +1,75 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width">
+
+  <script src="/lib/d3.v3.min.js"></script>
+
+  <style>
+      div.chart{
+          font-family:sans-serif;
+          font-size:0.7em;
+      }
+
+      div.bar {
+          background-color:DarkRed;
+          color:white;
+          height:3em;
+          line-height:3em;
+          padding-right:1em;
+          margin-bottom:2px;
+          text-align:right;
+          margin-left: 290px;
+      }
+      div.label {
+          height:3em;
+          line-height:3em;
+          padding-right:1em;
+          margin-bottom:2px;
+          float:left;
+          width:25em;
+          text-align:right;
+      }
+  </style>
+
+  <script>
+  function draw(data) {
+      d3.select("body")
+          .append("div")
+          .attr("class", "chart")
+          .selectAll("div.line")
+          .data(data.cash)
+          .enter()
+          .append("div")
+          .attr("class","line");
+
+      d3.selectAll("div.line")
+          .append("div")
+          .attr("class","label")
+          .text(function(d){
+              return d.name;
+          });
+
+      d3.selectAll("div.line") .append("div")
+          .attr("class","bar")
+          .style("width", function(d){
+              return d.count/100 + "px";
+          }) .text(function(d) {
+              return Math.round(d.count);
+          });
+
+  }
+  </script>
+
+</head>
+<body>
+    <script>
+        d3.json("/data/plaza_traffic.json", draw);
+    </script>
+</body>
+</html>
